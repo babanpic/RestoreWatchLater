@@ -6,5 +6,5 @@ YouTube removed the Watch Later button from the video player on [date]. This scr
 ## Installation
 
 1. Install Tampermonkey ([Chrome](https://chrome.google.com/webstore/detail/tampermonkey/dhdgffkkebhmkfjojejmpbldmpobfkfo) / [Firefox](https://addons.mozilla.org/en-US/firefox/addon/tampermonkey/))
-2. Click [here]([https://raw.githubusercontent.com/yourname/repo/main/script.user.js](https://github.com/babanpic/RestoreWatchLater/raw/refs/heads/main/RestoreWatchLater.user.js) to install
+2. Click [here](https://github.com/babanpic/RestoreWatchLater/raw/refs/heads/main/RestoreWatchLater.user.js) to install
 3. Done! The button will appear when you hover over a video thumbnail.
