@@ -2,8 +2,11 @@
 // @name         YouTube 1‑Click Watch Later (Clean)
 // @namespace    http://tampermonkey.net/
 // @version      8.5
+// @downloadURL  https://github.com/babanpic/RestoreWatchLater/raw/refs/heads/main/RestoreWatchLater.user.js
+// @updateURL    https://github.com/babanpic/RestoreWatchLater/raw/refs/heads/main/RestoreWatchLater.user.js
 // @description  Adds a floating Watch Later button in fixed position on each thumbnail
-// @author       babanpic on github
+// @author       https://github.com/babanpic
+// @supportURL   https://ko-fi.com/babanpic
 // @match        https://www.youtube.com/*
 // @grant        none
 // ==/UserScript==
