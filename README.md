@@ -12,4 +12,5 @@ If this script saves you time, you can buy me a coffee with this link: https://k
 
 1. Install Tampermonkey ([Chrome](https://chrome.google.com/webstore/detail/tampermonkey/dhdgffkkebhmkfjojejmpbldmpobfkfo) / [Firefox](https://addons.mozilla.org/en-US/firefox/addon/tampermonkey/))
 2. Click [here](https://github.com/babanpic/RestoreWatchLater/raw/refs/heads/main/RestoreWatchLater.user.js) to install
-3. Done! The button will appear when you hover over a video thumbnail.
+3. Make sure "Video Previews" is turned OFF in your youtube playback and performance settings here, this will disable videos playing within the thumbnail https://www.youtube.com/account_playback
+4. Done! The button will appear when you hover over a video thumbnail.
