@@ -1,28 +1,37 @@
 // ==UserScript==
-// @name         YouTube 1‑Click Watch Later (Clean)
+// @name         YouTube 1‑Click Watch Later
 // @namespace    http://tampermonkey.net/
-// @version      8.6
+// @version      9.1
 // @downloadURL  https://github.com/babanpic/RestoreWatchLater/raw/refs/heads/main/RestoreWatchLater.user.js
 // @updateURL    https://github.com/babanpic/RestoreWatchLater/raw/refs/heads/main/RestoreWatchLater.user.js
-// @description  Adds a floating Watch Later button in fixed position on each thumbnail
+// @description  Adds a Watch Later button on YouTube home and subscriptions pages
 // @author       https://github.com/babanpic
 // @supportURL   https://ko-fi.com/babanpic
-// @match        https://www.youtube.com/*
+// @match        https://www.youtube.com/
+// @match        https://www.youtube.com/feed/subscriptions
 // @grant        none
 // ==/UserScript==
 
 (function() {
     'use strict';
 
+    // Only run on home page or subscriptions page
+    const isHomePage = window.location.pathname === '/';
+    const isSubscriptionsPage = window.location.pathname === '/feed/subscriptions';
+
+    if (!isHomePage && !isSubscriptionsPage) {
+        return; // Exit immediately if not on target pages
+    }
+
     let currentCard = null;
     let isProcessing = false;
     let hideTimeout = null;
 
     // CONFIGURATION - Adjust these values as needed
-    const BUTTON_OFFSET_FROM_RIGHT = 115; // Pixels from right edge (increase to move left, decrease to move right)
+    const BUTTON_OFFSET_FROM_RIGHT = 115; // Pixels from right edge
     const BUTTON_OFFSET_FROM_TOP = 8;    // Pixels from top edge
 
-    // Create floating button - NO transitions/animations
+    // Create floating button
     const wlBtn = document.createElement('button');
     wlBtn.textContent = '⏱️ Watch Later';
     wlBtn.style.cssText = `
@@ -41,16 +50,14 @@
         box-shadow: 0 2px 8px rgba(0,0,0,0.3);
         white-space: nowrap;
         pointer-events: auto;
-        min-width: 110px; /* Fixed minimum width to prevent shifting */
+        min-width: 110px;
         text-align: center;
     `;
     document.body.appendChild(wlBtn);
 
-    // Store the original text for resetting
     const ORIGINAL_TEXT = '⏱️ Watch Later';
     const ADDED_TEXT = '✓ Added';
 
-    // Function to reset button to original state
     function resetButtonState() {
         if (wlBtn.textContent !== ORIGINAL_TEXT) {
             wlBtn.textContent = ORIGINAL_TEXT;
@@ -58,7 +65,6 @@
         }
     }
 
-    // Simple hover effect without transition
     wlBtn.onmouseover = () => {
         if (!isProcessing && wlBtn.textContent === ORIGINAL_TEXT) {
             wlBtn.style.backgroundColor = '#2a7fcc';
@@ -70,21 +76,26 @@
         }
     };
 
-    // Find video card from element
+    // Find video card from element (only videos, not playlists)
     function findVideoCard(element) {
         if (!element) return null;
         let current = element;
         while (current && current !== document.body) {
+            // Only match video renderers, not playlist renderers
             if (current.tagName === 'YTD-RICH-ITEM-RENDERER' ||
                 current.tagName === 'YTD-VIDEO-RENDERER') {
-                return current;
+                // Additional check: make sure it's a video, not a playlist
+                const isPlaylist = current.querySelector('ytd-thumbnail-overlay-playlist-status-renderer, [aria-label*="playlist"]');
+                if (!isPlaylist) {
+                    return current;
+                }
             }
             current = current.parentElement;
         }
         return null;
     }
 
-    // Position button in top-right corner of the thumbnail with offset
+    // Position button in top-right corner of the thumbnail
     function positionButtonOnCard(card) {
         if (!card) return false;
 
@@ -95,11 +106,10 @@
         if (thumbnail) {
             rect = thumbnail.getBoundingClientRect();
         } else {
-            // Fallback: use the card itself
             rect = card.getBoundingClientRect();
         }
 
-        // Check if card is in viewport (don't show if off-screen)
+        // Check if card is in viewport
         if (rect.top < 0 || rect.bottom > window.innerHeight ||
             rect.left < 0 || rect.right > window.innerWidth) {
             return false;
@@ -113,57 +123,34 @@
         return true;
     }
 
-    // Hide button with cleanup
     function hideButton() {
         if (hideTimeout) clearTimeout(hideTimeout);
         wlBtn.style.display = 'none';
         currentCard = null;
-        // Reset button state when hiding
         resetButtonState();
     }
 
-    // Show button on specific card
     function showButtonOnCard(card) {
         if (!card || isProcessing) return false;
-
-        // Reset button state before showing on new card
         resetButtonState();
-
-        // Position the button
-        const positioned = positionButtonOnCard(card);
-        if (!positioned) return false;
-
-        // Show button
+        if (!positionButtonOnCard(card)) return false;
         wlBtn.style.display = 'block';
         currentCard = card;
-
         return true;
     }
 
-    // Mouse move handler - simple show/hide logic
+    // Mouse move handler
     document.addEventListener('mousemove', (e) => {
         if (isProcessing) return;
-
-        // Clear any pending hide timeout
-        if (hideTimeout) {
-            clearTimeout(hideTimeout);
-            hideTimeout = null;
-        }
+        if (hideTimeout) clearTimeout(hideTimeout);
 
         const card = findVideoCard(e.target);
 
-        // Case 1: Hovering over a video card
         if (card) {
-            // If it's a different card than current
             if (card !== currentCard) {
-                // Immediately hide current button (no animation)
                 wlBtn.style.display = 'none';
-
-                // Show button on new card
                 if (showButtonOnCard(card)) {
-                    // Add mouseleave handler to this card
                     const mouseLeaveHandler = () => {
-                        // Delay hide slightly to allow moving to button
                         hideTimeout = setTimeout(() => {
                             if (wlBtn.style.display === 'block' && !wlBtn.matches(':hover')) {
                                 hideButton();
@@ -174,35 +161,29 @@
                     };
                     card.addEventListener('mouseleave', mouseLeaveHandler);
                 }
-            }
-            // If same card, ensure button is still visible
-            else if (wlBtn.style.display !== 'block') {
+            } else if (wlBtn.style.display !== 'block') {
                 showButtonOnCard(card);
             }
-        }
-        // Case 2: Not hovering over a card
-        else {
-            // Don't hide immediately if mouse might be going to button
-            if (!wlBtn.matches(':hover')) {
-                hideTimeout = setTimeout(() => {
-                    if (!wlBtn.matches(':hover')) {
-                        hideButton();
-                    }
-                    hideTimeout = null;
-                }, 100);
-            }
+        } else if (!wlBtn.matches(':hover')) {
+            hideTimeout = setTimeout(() => {
+                if (!wlBtn.matches(':hover')) hideButton();
+                hideTimeout = null;
+            }, 100);
         }
     });
 
-    // Reposition on scroll - only if button is visible
-    function repositionIfNeeded() {
+    // Reposition on scroll/resize
+    window.addEventListener('scroll', () => {
         if (currentCard && wlBtn.style.display === 'block' && !isProcessing) {
             positionButtonOnCard(currentCard);
         }
-    }
+    });
 
-    window.addEventListener('scroll', repositionIfNeeded);
-    window.addEventListener('resize', repositionIfNeeded);
+    window.addEventListener('resize', () => {
+        if (currentCard && wlBtn.style.display === 'block' && !isProcessing) {
+            positionButtonOnCard(currentCard);
+        }
+    });
 
     // Click handler
     wlBtn.onclick = async (e) => {
@@ -212,19 +193,12 @@
         if (isProcessing || !currentCard) return;
 
         isProcessing = true;
-        const originalBg = wlBtn.style.backgroundColor;
-
         wlBtn.textContent = '⏳ Adding...';
         wlBtn.style.backgroundColor = '#ff8c00';
 
         try {
             const card = currentCard;
             if (!card || !card.isConnected) throw new Error('Video card not found');
-
-            // Get video title for debugging
-            const titleElement = card.querySelector('#video-title, [title]');
-            const videoTitle = titleElement ? (titleElement.getAttribute('title') || titleElement.textContent || 'Unknown') : 'Unknown';
-            console.log(`Adding "${videoTitle}" to Watch Later`);
 
             // Close any existing menu
             document.body.click();
@@ -269,7 +243,6 @@
                 wlBtn.style.backgroundColor = '#2ba640';
                 document.body.click();
 
-                // Reset button after 2 seconds (only if still on same card)
                 setTimeout(() => {
                     if (currentCard === card && !isProcessing) {
                         resetButtonState();
