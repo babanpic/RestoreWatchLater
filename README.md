@@ -1,3 +1,5 @@
+# UPDATE YOUTUBE RE-ADDED THIS BUTTON, THIS SCRIPT IS USELESS FOR NOW
+
 # Restore YouTube "Watch Later" Button
 
 YouTube removed the Watch Later button from the Home/Subscriptions page on 27.03.2026. This is the same Youtube design update that makes the background glow with the average color of the thumbnail when you hover over a video.
